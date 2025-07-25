@@ -1,19 +1,20 @@
-import { Pool } from "pg";
-import neo4j from "neo4j-driver";
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const pg_1 = require("pg");
+const neo4j_driver_1 = __importDefault(require("neo4j-driver"));
 // ✅ Postgres Config
-const client = new Pool({
-  host: "ep-empty-scene-a2o9h0us-pooler.eu-central-1.aws.neon.tech",
-  user: "neondb_owner",
-  password: "npg_w0grzfP6jqbS",
-  database: "neondb",
-  ssl: true,
+const client = new pg_1.Pool({
+    host: "ep-empty-scene-a2o9h0us-pooler.eu-central-1.aws.neon.tech",
+    user: "neondb_owner",
+    password: "npg_w0grzfP6jqbS",
+    database: "neondb",
+    ssl: true,
 });
 // ✅ Neo4j Config
-const driver = neo4j.driver(
-  "bolt://localhost:7687",
-  neo4j.auth.basic("neo4j", "nikhil1234")
-);
+const driver = neo4j_driver_1.default.driver("bolt://localhost:7687", neo4j_driver_1.default.auth.basic("neo4j", "nikhil1234"));
 const CYPHER = `WITH $row AS row
 
 MERGE (u:User {name: row.org_user})
@@ -47,42 +48,39 @@ UNWIND row.permissions AS perm
   MERGE (t)-[:HAS_PERMISSION]->(p)
 
 `;
-
-function sanitizeRow(row: any): any {
-  const allowedTypes = ["string", "boolean", "number"];
-  const output: any = {};
-
-  for (const key in row) {
-    const value = row[key];
-
-    if (value == null) continue;
-
-    if (Array.isArray(value)) {
-      if (value.every((v) => typeof v === "string")) {
-        output[key] = value;
-      } else {
-        console.warn(`Skipping non-string array: ${key}`);
-      }
-    } else if (allowedTypes.includes(typeof value)) {
-      output[key] = value;
-    } else if (key.endsWith("_at")) {
-      // Attempt to convert date-like strings
-      output[key] = new Date(value).toISOString();
-    } else {
-      console.warn(`⚠️ Skipping unsupported property type for key: ${key}`);
+function sanitizeRow(row) {
+    const allowedTypes = ["string", "boolean", "number"];
+    const output = {};
+    for (const key in row) {
+        const value = row[key];
+        if (value == null)
+            continue;
+        if (Array.isArray(value)) {
+            if (value.every((v) => typeof v === "string")) {
+                output[key] = value;
+            }
+            else {
+                console.warn(`Skipping non-string array: ${key}`);
+            }
+        }
+        else if (allowedTypes.includes(typeof value)) {
+            output[key] = value;
+        }
+        else if (key.endsWith("_at")) {
+            // Attempt to convert date-like strings
+            output[key] = new Date(value).toISOString();
+        }
+        else {
+            console.warn(`⚠️ Skipping unsupported property type for key: ${key}`);
+        }
     }
-  }
-
-  return output;
+    return output;
 }
-
 // export async function insertRows(records: any[]) {
 //   const session = driver.session();
-
 //   try {
 //     for (const record of records) {
 //       const row = sanitizeRow(record); // ensures only allowed types are passed
-
 //       await session.run(
 //         `
 //         MERGE (t:Token {id: $row.id})
@@ -92,22 +90,17 @@ function sanitizeRow(row: any): any {
 //             t.description = $row.description,
 //             t.analyzed_at = datetime($row.analyzed_at),
 //             t.created_at = datetime($row.created_at)
-
 //         MERGE (o:Organization {id: $row.org_id})
 //         SET o.title = $row.org_title
-
 //         MERGE (u:User {username: $row.org_user})
 //         SET u.is_default = $row.org_default,
 //             u.role = $row.org_role
-
 //         MERGE (u)-[:BELONGS_TO]->(o)
 //         MERGE (t)-[:EXPOSED_BY]->(u)
-
 //         FOREACH (ep IN $row.endpoints |
 //           MERGE (e:Endpoint {path: ep})
 //           MERGE (t)-[:HAS_ENDPOINT]->(e)
 //         )
-
 //         FOREACH (perm IN $row.permissions |
 //           MERGE (p:Permission {name: perm})
 //           MERGE (t)-[:HAS_PERMISSION]->(p)
@@ -116,7 +109,6 @@ function sanitizeRow(row: any): any {
 //         { row }
 //       );
 //     }
-
 //     console.log("✅ ETL to Neo4j complete");
 //   } catch (error) {
 //     console.error("❌ ETL failed", error);
@@ -124,14 +116,12 @@ function sanitizeRow(row: any): any {
 //     await session.close();
 //   }
 // }
-
 async function insertData() {
-  const session = driver.session();
-  const res = await client.query("SELECT * FROM combined_findings");
-  for (const r of res.rows) {
-    const row = sanitizeRow(r);
-    await session.run(
-      `MERGE (t:Token {id: $row.id})
+    const session = driver.session();
+    const res = await client.query("SELECT * FROM combined_findings");
+    for (const r of res.rows) {
+        const row = sanitizeRow(r);
+        await session.run(`MERGE (t:Token {id: $row.id})
 SET t.secret = $row.secret,
     t.name = $row.secret, // for visible labels
     t.analyzed_at = datetime($row.analyzed_at),
@@ -166,15 +156,12 @@ FOREACH (perm IN $row.permissions |
   MERGE (p:Permission {name: perm})
   MERGE (t)-[:HAS_PERMISSION]->(p)
 )
-`,
-      { row }
-    );
-  }
-  await session.close();
-  await driver.close();
-  await client.end();
+`, { row });
+    }
+    await session.close();
+    await driver.close();
+    await client.end();
 }
-
 insertData().catch((err) => {
-  console.error(" ETL failed", err);
+    console.error(" ETL failed", err);
 });

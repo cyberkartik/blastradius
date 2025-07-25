@@ -182,7 +182,7 @@ const getVisual = "call db.schema.visualization()";
 const QUERY = `MATCH (a)-[r]->(b)
 RETURN a, r, b`;
 
-const FINDING_ID = `MATCH (t:Token {id: "demo-finding-001"})
+const FINDING_ID = `MATCH (t:Token {id: "a5a50fd3-d6e6-44fa-be2e-4431e1e02f25"})
 OPTIONAL MATCH (t)-[r1:EXPOSED_BY]->(u:User)-[r2:BELONGS_TO]->(o:Organization)
 OPTIONAL MATCH (t)-[r3:HAS_ENDPOINT]->(e:Endpoint)
 OPTIONAL MATCH (t)-[r4:HAS_PERMISSION]->(p:Permission)
@@ -220,7 +220,7 @@ export default function Neo4jVisual() {
   const [nodes, setNodes] = useState();
   const [rels, setRels] = useState([]);
   const fetchAndFormat = async (query: string, params: any) => {
-    await fetchD(getVisual, params)
+    await fetchD(FINDING_ID, params)
       .then((d) => {
         const styledNodes = d.nodes.map((node: Node) => {
           const ogNode = d.recordObjectMap.get(node.id);

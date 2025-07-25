@@ -28,8 +28,8 @@ import AuthCallback from "./components/wait/AuthCallback";
 import Risk from "./pages/dashboard/RiskPage";
 import IntegrationAzurePage from "./pages/integrations/AzurePage";
 import IntegrationAWSPage from "./pages/integrations/AwsPage";
-import TokenVisual from "./pages/blast-radius/TokenVisual";
-import Neo4jVisual from "./pages/blast-radius/TokenVisual";
+// import TokenVisual from "./pages/blast-radius/TokenVisual";
+import Neo4jVisual from "./Neo4jVisual";
 function App() {
   return (
     <ToasterProvider>
@@ -39,12 +39,13 @@ function App() {
           <Route path="/repositories" element={<RepositoriesPage />} />
           <Route path="/repositories/:repoId" element={<ListPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/token" element={<Neo4jVisual />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route
             path="/repositories/:repoId/secrets/:secretId"
-            element={<TokenVisual />}
+            element={<Neo4jVisual />}
           />
           <Route element={<PublicRoute />}>
             <Route path="/" element={<LoginPage />} />
@@ -55,7 +56,7 @@ function App() {
             />
             <Route path="/auth" element={<AuthCallback />} />
           </Route>
-          <Route path="/token" element={<Neo4jVisual />} />
+          {/* <Route path="/token" element={<Neo4jVisual />} /> */}
 
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
